@@ -251,7 +251,7 @@ export default {
   },
   methods:{
     goSearch(){
-      // this.$router.push('/search');
+      this.$router.push('/search');
     },
     changeBanner(index){
       this.bannerIndex=index;
@@ -297,10 +297,7 @@ export default {
     overflow: hidden;
     .banner_body{
         width:100%;
-        min-height:187px;
-        .van-swipe__track{
-          min-height: 187px;
-        }
+        height:187px;
         img{
             width:100%;
             min-height:187px;
@@ -319,14 +316,20 @@ export default {
                 margin-right:10px;
                 font-size:12px;
                 background-color: #fff;
+                opacity: 0.4;
                 &.active{
-                    opacity: 0.5;
+                    opacity: 1;
                 }
             }
         }
       }
   }
   //banner结束
+  // 四宫格开始
+  .van-grid-item__icon{
+      font-size: 1.04667rem;
+  }
+  // 四宫格结束
   // 新闻滚动开始
   .roll_news{
       background-color: #fdfbfb;
