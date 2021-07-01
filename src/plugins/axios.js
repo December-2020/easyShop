@@ -2,6 +2,7 @@
 
 import Vue from 'vue';
 import axios from "axios";
+import store from '@/store';
 
 // Full config:  https://github.com/axios/axios#request-config
 // axios.defaults.baseURL = process.env.baseURL || process.env.apiUrl || '';
@@ -19,8 +20,16 @@ const _axios = axios.create(config);
 _axios.interceptors.request.use(
   function(config) {
     // Do something before request is sent
+    // 在ajax请求发起之前,判断本地有没有token,如果有,则带上token
+    let token = store.getters.tokens;
+    if(token&&token.length>1){
+      config.headers={
+        'Authori-zation':'Bearer '+token,
+      }
+    }
     return config;
   },
+
   function(error) {
     // Do something with request error
     return Promise.reject(error);
@@ -58,4 +67,4 @@ Plugin.install = function(Vue) {
 
 Vue.use(Plugin)
 
-export default Plugin;
+export default _axios;

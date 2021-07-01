@@ -3,6 +3,7 @@ import './plugins/axios'
 import App from './App.vue'
 import router from './router'
 import store from './store'
+import './assets/font/iconfont.css'
 
 // 动态修改html元素的字体大小
 import 'amfe-flexible'

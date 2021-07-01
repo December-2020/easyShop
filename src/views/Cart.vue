@@ -18,7 +18,7 @@
         </div>
         <div class="total">购买数量<span>{{shopNum}}</span></div>
         <div class="content">
-            <div class="con_null" >
+            <div class="con_null" v-if="shopNum===0">
                 <div class="img">
                     <img :src="imgUrl" alt="" v-lazy="imgUrl">
                 </div>
@@ -42,13 +42,65 @@
                     </ul>
                 </div>
             </div>
+            <div class="con_has" v-else>
+                 <ul>
+                    <!-- 复选框组 组件 -->
+                    <van-checkbox-group v-model="result" ref="checkboxGroup">
+                        <li v-for="(item,index) in shopList" :key="item.id">
+                            <van-swipe-cell>
+                                <div class="card">
+                                    <!-- 复选框 -->
+                                    <van-checkbox 
+                                        :name="item" 
+                                        checked-color="#ee0a24"
+                                        icon-size="18px"
+                                        ref="checkItem"
+                                        @click="changeCheckBox(index)"
+                                    />
+                                    <van-image 
+                                        :src="item.productInfo.image" 
+                                        lazy-load
+                                        @click="gotoDetail(item.product_id)"
+                                    />
+                                    <div class="mes">
+                                        <p>{{item.productInfo.store_name}}</p>
+                                        <p>{{item.productInfo.attrInfo.suk}}</p>
+                                        <div class="bottom">
+                                            <div class="l">￥{{item.truePrice}}</div>
+                                            <div class="r">
+                                                <span @click="reduceNum(item,index)">-</span>
+                                                <input type="number" 
+                                                 v-model="iptVal[index]"
+                                                 @blur="changeIpt(item,index)"
+                                                >
+                                                <span @click="addNum(item,index)">+</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <template #right>
+                                    <van-button square text="删除" type="danger" class="delete-button" @click="deleteShop(index)"/>
+                                </template>
+                            </van-swipe-cell>
+                        </li>
+                    </van-checkbox-group>
+                </ul>
+                <div class="foot">
+                    <div class="l">
+                        <van-checkbox v-model="checkAll" @change="toggleeAll" checked-color="#ee0a24">全选 ({{checedkNum}})</van-checkbox>
+                    </div>
+                    <div class="r">
+                        ￥{{checkedPrice}}
+                        <van-button type="danger"  round>立即下单</van-button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </template>
 
 <script>
 import PictureItem from '@/components/PictureItem';
-// import { mapMutations, mapGetters } from "vuex";
 import {mapMutations} from 'vuex'
 
 export default {
@@ -58,21 +110,129 @@ export default {
             imgUrl:'http://47.115.51.185/h5/img/noCart.6f2abfef.png',
             list:[],
             shopNum:0,
+            result:[],
+            checkAll:true,
+            iptVal:[],
+            checedkNum:0,
+            checkedPrice:0,
+            shopList:[],
         }
     },
-    created(){
-        this.changeLoading(true);
-        this.axios.get('api/cart/list').then(d=>{
-            this.list = d.data.data.valid;
-            console.log(this.list);
-        })
-        this.axios.get('api/cart/count').then(d=>{
-            this.shopNum = d.data.data.count;
-            console.log(this.shopNum);
-        })
-        this.changeLoading(false);
+    activated(){
+        
+        this.showDiv();
     },
     methods:{
+        showDiv(){
+            this.changeLoading(true);
+            this.axios.get('api/cart/count').then(d=>{
+
+                this.shopNum = d.data.data.count;
+                // 购物车为空时
+                if(this.shopNum === 0){
+                    this.axios.get('api/product/detail/74').then(d=>{
+                        this.list = d.data.data.good_list;
+                    })
+                }else{
+                    this.axios.get('api/cart/list').then(d=>{
+                        this.shopList = d.data.data.valid;
+                        // console.log(this.shopList);
+                        this.eachArr(this.shopList);
+                    })
+                }
+                this.changeLoading(false);
+            })
+        },
+        eachArr(arr){
+            arr.map(item => {
+                this.iptVal.push(item.cart_num);
+                this.result.push(item);
+            })
+        },
+        gotoDetail(id){
+            this.$router.push('/details/'+id);
+        },
+        // 数量+1
+        addNum(item,index){
+            let id = item.id;
+            // 判断是否达到最大数量
+            // console.log(item);
+            let maxNum = item.trueStock;
+            // console.log(maxNum);
+            let number = ++item.cart_num ;
+            if(number <= maxNum){
+                this.axios.post('api/cart/num',{
+                    id,
+                    number,
+                }).then(d=>{
+                    if(d.data.status == 200){
+                        this.iptVal.splice(index,1,number);
+                    }
+                })
+            }else{
+                this.$toast({
+                    message:'库存不足'
+                })
+            }
+        },
+        // 数量-1
+        reduceNum(item,index){
+            let id = item.id;
+            if(item.cart_num > 1){
+                let number = --item.cart_num;
+                this.axios.post('api/cart/num',{
+                    id,
+                    number,
+                }).then(d=>{
+                    if(d.data.status == 200){
+                        // console.log('数量修改成功',number);
+                        this.iptVal.splice(index,1,number);
+                        // console.log(item.cart_num);
+                    }
+                })
+            }
+        },
+        // 改变输入框
+        changeIpt(item,index){
+            let id = item.id;
+            let maxNum = item.trueStock;
+            let val = this.iptVal[index];
+            if(val > 0 && val < maxNum){
+                this.axios.post('api/cart/num',{
+                    id,
+                    number:val,
+                }).then(d=>{
+                    if(d.data.status === 200){
+                        this.iptVal.splice(index,1,val);
+                    }else{
+                        // console.log();
+                        this.$toast(d.data.msg);
+                    }
+                })
+            }else{
+                this.$toast({
+                    message:'输入无效'
+                })
+            }
+        },
+        // 单选控制全选
+        changeCheckBox(){
+            if(this.result.length == this.shopList.length){
+                this.checkAll = true;
+            }else{
+                this.checkAll = false;
+            }
+        },
+        // 反选
+        toggleeAll(){
+            if(!this.checkAll){
+                this.$refs.checkboxGroup.toggleAll(false);
+                this.checkAll = false;
+           }else{
+                this.$refs.checkboxGroup.toggleAll(true);
+                this.checkAll = true;
+           }
+        },
         ...mapMutations(['changeLoading'])
     }
 }
@@ -89,7 +249,7 @@ export default {
     font-size: 14px;
     background-color: #f5f5f5;
     min-height: 100vh;
-    padding-bottom: 50px;
+    padding-bottom: 95px;
     position: relative;
     .title{
         margin: 0;
@@ -137,9 +297,11 @@ export default {
                     display: flex;
                     flex-wrap: wrap;
                     justify-content: space-between;
+                    padding: 0 10px;
                     li{
                         width: 45%;
                         margin: 6px;
+                        // border: solid 1px red;
                         .picture_item{
                             // border: solid 1px red;
                             width: 100%;
@@ -182,8 +344,15 @@ export default {
                                 justify-content: space-evenly;
                                 p{
                                     margin: 0;
-                                    .text-hidden;
                                     font-size: 13px;
+                                    // border: solid 1px red;
+                                    width: 240px;
+                                    white-space: nowrap;
+                                    overflow: hidden;
+                                    text-overflow: ellipsis;
+                                    &:nth-child(1){
+                                        font-weight: bold;
+                                    }
                                     &:nth-child(2){
                                         font-size: 10px;
                                         color: #978a90;

@@ -55,7 +55,7 @@ export default {
         }
         .middle{
             border-radius: 10px 0 10px 0;
-            background-image: linear-gradient(left,#f6632d,lighten(#e31d1a,5%));
+            background-image: linear-gradient(left,#ff6147,#ff3f1f);
             width: 130px;
             text-align: center;
             color: snow;

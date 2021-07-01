@@ -26,7 +26,7 @@
           <van-icon name="share-o" />
         </div>
       </div>
-      <div class="middle">{{ storeInfo.store_info }}</div>
+      <div class="middle">{{ storeInfo.store_name }}</div>
       <div class="bottom">
         <ul>
           <li>原价: ￥{{ storeInfo.ot_price }}</li>
@@ -96,8 +96,8 @@
       <van-goods-action>
         <van-goods-action-icon icon="service-o" text="客服" color="#666666" />
         <van-goods-action-icon icon="star-o" color="#666666" text="收藏" />
-        <van-goods-action-icon icon="cart-o" to="/cart" color="#666666" v-if="!getShopList||getShopList.length==0" text="购物车" />
-        <van-goods-action-icon icon="cart-o" to="/cart" color="#666666" v-else :badge="getShopList.length" text="购物车" />
+        <van-goods-action-icon icon="cart-o" to="/cart" color="#666666" v-if="cartCount === 0 " text="购物车" />
+        <van-goods-action-icon icon="cart-o" to="/cart" color="#666666" v-else :badge="cartCount" text="购物车" />
         <van-goods-action-button
           type="warning"
           @click="chooseSku"
@@ -139,6 +139,7 @@ export default {
       list3: [],
       show: false,
       showChoose: false,
+      cartCount:0,
       sku: {
         //初始化demo数据
         // 所有sku规格类目与其值的从属关系，比如商品有颜色和尺码两大类规格，颜色下面又有红色和蓝色两个规格值。
@@ -257,7 +258,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(["getShopList",'loginUser']),
+    ...mapGetters(['loginUser']),
   },
   methods: {
     goBuy(){
@@ -277,63 +278,38 @@ export default {
     chooseSku() {
       this.show = true;
     },
-    addCart(event) {
-      // 1.获取购物车已有的内容
-      let shopList = this.getShopList;
-      // 2. 没有内容时 空数组
-      if (shopList == null) {
-        shopList = [];
-      }
-      // 3. 判断是否是sku商品
-      if (event.selectedSkuComb) {
-        // 4.1是, 找到sku
-        let skuId = event.selectedSkuComb.id;
-        let proVal = this.detailData.productValue;
-        // console.log(proVal);
-        let proStr = "";
-        let proNum = 0;
-        for (let key in proVal) {
-          if (proVal[key].unique == skuId) {
-            proStr = proVal[key].suk;
-            proNum = proVal[key].stock;
+    addCart(event){
+      if(this.loginUser){
+        let uniqueId = '';
+        let str = '';
+        if(this.s2Text  === ''){
+          str = this.s1Text
+        }else{
+          str = `${this.s1Text},${this.s2Text}`;
+        }
+        let obj = this.detailData.productValue;
+        for(let i in obj){
+          if(obj[i].suk.indexOf(str) != -1){
+            uniqueId = obj[i].unique;
             break;
           }
         }
-        // 修改数据格式
-        let shopObj = {
-          id: event.goodsId,
-          name: this.storeInfo.store_name,
-          img: event.selectedSkuComb.imgUrl,
-          num: event.selectedNum,
-          price: event.selectedSkuComb.price / 100 + ".00",
-          vip_price: this.storeInfo.vip_price,
-          skuStr: proStr,
-          max_num:proNum,
-        };
-        // console.log(shopObj);
-        shopList.push(shopObj);
-      } else {
-        // 4.2不是 修改数据格式
-        let shopObj = {
-          id: event.goodsId,
-          name: this.storeInfo.store_name,
-          num: event.selectedNum,
-          img: this.storeInfo.image,
-          price: this.storeInfo.price,
-          vip_price: this.storeInfo.vip_price,
-          skuStr: "无规格",
-          max_num:this.storeInfo.stock,
-        };
-        //5. 存入数组
-        shopList.push(shopObj);
+        this.axios.post('api/cart/add',{
+          cartNum:event.selectedNum,
+          new:0,
+          productId:this.id,
+          uniqueId,
+        }).then(d=>{
+          if(d.data.status === 200){
+            this.$toast({
+              message:'添加成功'
+            })
+            this.getShopCount(1);
+          }
+        })
+      }else{
+        this.$router.push('/login');
       }
-      // 6. 去重
-      // 7. 修改vuex中数据
-      this.changeBuyShop(shopList);
-      //  console.log(this.getShopList);
-      // 8.成功提示
-      this.$toast.success('添加成功');
-      // 隐藏购物栏
       this.show = false;
     },
 
@@ -346,15 +322,27 @@ export default {
         this.s2Text = event.skuValue.name;
       }
     },
-
+    getShopCount(params){
+      if(!params){
+        this.axios.get('api/cart/count').then(d=>{
+          this.cartCount = d.data.data&&d.data.data.count?d.data.data.count:0;
+          // console.log(this.cartCount);
+        })
+      }else{
+        this.axios.get('api/cart/count?numType=0').then(d=>{
+          this.cartCount = d.data.data&&d.data.data.count?d.data.data.count:0;
+        })
+      }
+    },
     goShopDetail(id){
       this.changeLoading(true);
+      this.getShopCount();
       this.axios.get(`api/product/detail/${id}`).then((d) => {
         this.detailData = d.data.data;
         this.banner = this.detailData.storeInfo.slider_image;
         // console.log(this.banner);
         this.storeInfo = this.detailData.storeInfo;
-      //   console.log(this.detailData);
+        // console.log(this.storeInfo);
         // 分页轮播
         this.list1 = this.detailData.good_list.slice(0, 6);
         this.list2 = this.detailData.good_list.slice(6, 12);
@@ -426,14 +414,17 @@ export default {
         this.changeLoading(false);
       });
     },
-    ...mapMutations(["changeLoading", "changeBuyShop","changeOrderShop","clearOrderShop"]),
+    ...mapMutations(["changeLoading",]),
   },
 };
 </script>
 
 <style lang="less">
+html{
+  background-color: #fafafa;
+}
 .details {
-  background-color: #f5f5f5;
+  // background-color: #f5f5f5;
   padding-bottom: 60px;
   .banner {
     position: relative;
