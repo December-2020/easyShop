@@ -14,7 +14,10 @@
     </van-overlay>
     
     <keep-alive>
-      <router-view/>
+      <router-view 
+        @cKey="setOrderKey" :orderKey="orderKey"
+        @bList="setBuyList" :buyList="buyList"
+      />
     </keep-alive>
 
     <div class="pictureBox"  :style="{bottom:`${mTop}px`}">
@@ -45,12 +48,21 @@ export default {
       showIcon:false,
       mTop:60,
       originY:0,
+      orderKey:'',
+      buyList:null,
     }
   },
   mounted(){
     // this.$refs.box.addEventListener('touchstart',this.start);
   },
   methods:{
+    setOrderKey(payload){
+      // console.log(payload);
+      this.orderKey = payload;
+    },
+    setBuyList(payload){
+      this.buyList = payload;
+    },
     showArr(){
       this.showIcon = !this.showIcon;
     },

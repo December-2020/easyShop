@@ -61,6 +61,36 @@ const routes = [
     component:() => import('@/views/Cart'),
   },
   {
+    path:'/order/:ids',
+    name:'Order',
+    props:true,
+    meta:{
+      login:true,
+      hideNav:true,
+    },
+    component:() => import('@/views/Order'),
+  },
+  {
+    path:'/pay/:id',
+    name:'Pay',
+    props:true,
+    meta:{
+      login:true,
+      hideNav:true,
+    },
+    component:() => import('@/views/Pay'),
+  },
+  {
+    path:'/dispatching/:id',
+    name:'Dispatching',
+    props:true,
+    meta:{
+      login:true,
+      hideNav:true,
+    },
+    component:() => import('@/views/Dispatching'),
+  },
+  {
     path:'/login',
     name:"Login",
     meta:{

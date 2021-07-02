@@ -79,7 +79,7 @@
                                     </div>
                                 </div>
                                 <template #right>
-                                    <van-button square text="删除" type="danger" class="delete-button" @click="deleteShop(item.id)"/>
+                                    <van-button square text="删除" type="danger" class="delete-button" @click="deleteShop(item.id,index)"/>
                                 </template>
                             </van-swipe-cell>
                         </li>
@@ -91,7 +91,7 @@
                     </div>
                     <div class="r">
                         ￥{{checkedPrice}}
-                        <van-button type="danger"  round>立即下单</van-button>
+                        <van-button type="danger" @click="goOrder" round>立即下单</van-button>
                     </div>
                 </div>
             </div>
@@ -116,20 +116,12 @@ export default {
             checedkNum:0,
             checkedPrice:0,
             shopList:[],
+            // 订单需要
         }
     },
     activated(){
         
         this.showDiv();
-    },
-    watch:{
-        // 'shopList':{
-        //     handler(){
-        //         this.sumPrice();
-        //         console.log(this.checkedPrice);
-        //     },
-        //     deep:true,
-        // },
     },
     methods:{
         showDiv(){
@@ -230,7 +222,9 @@ export default {
         },
         // 单选控制全选
         changeCheckBox(){
-            if(this.result.length == this.shopList.length && this.result.length != 0){
+            let arr = this.unique(this.result);
+            // console.log(arr);
+            if(this.shopList.length == arr.length){
                 this.checkAll = true;
             }else{
                 this.checkAll = false;
@@ -266,14 +260,33 @@ export default {
             this.checedkNum = totalNum;
         },
         // 删除
-        deleteShop(id){
+        deleteShop(id,index){
             // console.log(id);
             this.axios.post('api/cart/del',{
                 ids:[id]
             }).then(d=>{
                 if(d.data.status == 200){
                     this.$toast('删除成功');
+                    this.result.splice(index,1);
                     this.showDiv();
+                }
+            })
+        },
+        //跳转到订单页面
+        goOrder(){
+            let str = '';
+            let arr = this.unique(this.result);
+            arr.map(item=>{
+                str += item.id + ',';
+            })
+            str = str.substr(0,str.length-1);
+            this.axios.post('api/order/confirm',{
+                cartId:str
+            }).then(d=>{
+                if(d.data.status == 200){
+                    this.$router.push('/order/'+str);
+                    this.$emit('cKey',d.data.data.orderKey);
+                    this.$emit('bList',this.result);
                 }
             })
         },
