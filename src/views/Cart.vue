@@ -55,7 +55,7 @@
                                         checked-color="#ee0a24"
                                         icon-size="18px"
                                         ref="checkItem"
-                                        @click="changeCheckBox(index)"
+                                        @click="changeCheckBox()"
                                     />
                                     <van-image 
                                         :src="item.productInfo.image" 
@@ -79,7 +79,7 @@
                                     </div>
                                 </div>
                                 <template #right>
-                                    <van-button square text="删除" type="danger" class="delete-button" @click="deleteShop(index)"/>
+                                    <van-button square text="删除" type="danger" class="delete-button" @click="deleteShop(item.id)"/>
                                 </template>
                             </van-swipe-cell>
                         </li>
@@ -122,6 +122,15 @@ export default {
         
         this.showDiv();
     },
+    watch:{
+        // 'shopList':{
+        //     handler(){
+        //         this.sumPrice();
+        //         console.log(this.checkedPrice);
+        //     },
+        //     deep:true,
+        // },
+    },
     methods:{
         showDiv(){
             this.changeLoading(true);
@@ -138,6 +147,7 @@ export default {
                         this.shopList = d.data.data.valid;
                         // console.log(this.shopList);
                         this.eachArr(this.shopList);
+                        this.sumPrice();
                     })
                 }
                 this.changeLoading(false);
@@ -167,6 +177,7 @@ export default {
                 }).then(d=>{
                     if(d.data.status == 200){
                         this.iptVal.splice(index,1,number);
+                        this.sumPrice();
                     }
                 })
             }else{
@@ -188,6 +199,7 @@ export default {
                         // console.log('数量修改成功',number);
                         this.iptVal.splice(index,1,number);
                         // console.log(item.cart_num);
+                        this.sumPrice();
                     }
                 })
             }
@@ -204,6 +216,7 @@ export default {
                 }).then(d=>{
                     if(d.data.status === 200){
                         this.iptVal.splice(index,1,val);
+                        this.sumPrice();
                     }else{
                         // console.log();
                         this.$toast(d.data.msg);
@@ -217,21 +230,52 @@ export default {
         },
         // 单选控制全选
         changeCheckBox(){
-            if(this.result.length == this.shopList.length){
+            if(this.result.length == this.shopList.length && this.result.length != 0){
                 this.checkAll = true;
             }else{
                 this.checkAll = false;
             }
+            this.sumPrice();
         },
         // 反选
         toggleeAll(){
-            if(!this.checkAll){
-                this.$refs.checkboxGroup.toggleAll(false);
-                this.checkAll = false;
-           }else{
-                this.$refs.checkboxGroup.toggleAll(true);
-                this.checkAll = true;
-           }
+            if(this.checkAll){
+                this.result = [...this.shopList];
+            }else{
+                this.result = [];
+            }
+            this.sumPrice();
+        },
+        // 去重
+        unique(arr){
+            let newArr = arr.filter((item,index,self)=>{
+                return self.findIndex(el=>el.id==item.id) === index;
+            })
+            return (newArr);
+        },
+        // 总价
+        sumPrice(){
+            let arr = this.unique(this.result);
+            let sum = 0;
+            let totalNum = 0;
+            arr.map(item => {
+                sum += item.truePrice * item.cart_num;
+                totalNum += item.cart_num;
+            })
+            this.checkedPrice = sum.toFixed(1);
+            this.checedkNum = totalNum;
+        },
+        // 删除
+        deleteShop(id){
+            // console.log(id);
+            this.axios.post('api/cart/del',{
+                ids:[id]
+            }).then(d=>{
+                if(d.data.status == 200){
+                    this.$toast('删除成功');
+                    this.showDiv();
+                }
+            })
         },
         ...mapMutations(['changeLoading'])
     }
