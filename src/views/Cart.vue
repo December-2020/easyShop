@@ -120,8 +120,17 @@ export default {
         }
     },
     activated(){
-        
         this.showDiv();
+    },
+    watch:{
+        result:{
+            handler(){
+                this.changeCheckBox();
+                this.sumPrice();
+            },
+            deep:true,
+            immediate: true,
+        },
     },
     methods:{
         showDiv(){

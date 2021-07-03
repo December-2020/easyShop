@@ -1,7 +1,7 @@
 <template>
     <div class="login">
         <div class="img">
-            <van-image :src="imgUrl"  lazy-load round></van-image>
+            <van-image :src="imgUrl"  lazy-load round fit="cover"></van-image>
         </div>
         <div class="mes">
             <component :is="showComponent"></component>

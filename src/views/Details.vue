@@ -242,8 +242,8 @@ export default {
       s2Text: "",
     };
   },
-  created() {
-    // console.log(this.id);
+  activated() {
+    this.getShopCount();
   },
   mounted(){
     this.goShopDetail(this.id);
@@ -255,7 +255,7 @@ export default {
         this.goShopDetail(newVal);
       },
       // deep:true,
-    }
+    },
   },
   computed: {
     ...mapGetters(['loginUser']),

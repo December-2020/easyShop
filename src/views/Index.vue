@@ -259,6 +259,9 @@ export default {
     changeBannerRec(index){
       this.bannerIndexRec = index;
     },
+    gotoShop(item){
+        this.$router.push(`/shop/${item.id}?title=${item.cate_name}`)
+    },
     ...mapMutations(['changeLoading']),
   },
 }
@@ -270,6 +273,15 @@ export default {
   -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+.afterColor{
+    content: '';
+    position: absolute;
+    height: 1.5px;
+    width: 86%;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
 }
 .index{
   overflow-y: auto;
@@ -365,16 +377,24 @@ export default {
                       font-weight: bold;
                       margin-bottom: 10px;
                   }
-                  &::after{
-                      content: '';
-                      position: absolute;
-                      height: 1.5px;
-                      width: 86%;
-                      background-color: #ff421cc9;
-                      bottom: 0;
-                      left: 50%;
-                      transform: translateX(-50%);
-                  }
+                &:nth-child(3n){
+                    &::after{
+                        .afterColor;
+                        background-color: #ff6960;
+                    }
+                }
+                &:nth-child(3n-1){
+                    &::after{
+                        .afterColor;
+                        background-color: #579afe;
+                    }
+                }
+                &:nth-child(3n-2){
+                    &::after{
+                        .afterColor;
+                        background-color: #47b479;
+                    }
+                }
               }
               &::-webkit-scrollbar{
                   display: none;
@@ -494,7 +514,6 @@ export default {
         .box{
             background-color: #fff;
             position: relative;
-            z-index: 9;
             width: 94vw;
             border-radius: 6px;
             margin: 0 auto;

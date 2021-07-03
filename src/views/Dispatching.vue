@@ -6,6 +6,7 @@
                 height="55" 
                 src="http://datong.crmeb.net/public/uploads/attach/2019/03/28/5c9ccca12638a.gif" 
                 lazy-load
+                fit="cover"
             />
             <div class="r">
                 <p>商家未发货,请耐心等待</p>

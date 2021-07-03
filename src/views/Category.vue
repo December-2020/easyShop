@@ -11,7 +11,7 @@
             <ul class="children">
               <!-- 循环子分类 -->
               <router-link tag="li" v-for="c in cate.children" :key="c.id" :to="`/shop/${c.id}?title=${c.cate_name}`">
-                <van-image :src="c.pic"/>
+                <van-image fit="cover" :src="c.pic"/>
                 <span>{{c.cate_name}}</span>
               </router-link>
             </ul>
