@@ -1,5 +1,6 @@
 <template>
   <div id="app">
+    <header></header>
     <van-tabbar  active-color="#e31d1a" inactive-color="#9a9a9a" route v-show="!$route.meta.hideNav">
       <van-tabbar-item icon="wap-home-o" to="/">首页</van-tabbar-item>
       <van-tabbar-item icon="apps-o" to="/category">分类</van-tabbar-item>
@@ -82,6 +83,10 @@ export default {
 <style lang="less">
 #app{
   position: relative;
+  header{
+    height: 30px;
+    width: 100%;
+  }
   .wraper-loading{
     height: 100%;
     display: flex;
